@@ -6,10 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="54652882-9910-4384-85d3-e7904f72222e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/notificationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/services/notificationService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/paymentService.js" beforeDir="false" afterPath="$PROJECT_DIR$/services/paymentService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/rabbitmq.js" beforeDir="false" afterPath="$PROJECT_DIR$/utils/rabbitmq.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,7 +63,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1734199520574</updated>
-      <workItem from="1734199523062" duration="5743000" />
+      <workItem from="1734199523062" duration="7007000" />
     </task>
     <servers />
   </component>
