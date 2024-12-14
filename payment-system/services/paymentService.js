@@ -1,16 +1,30 @@
-const { getChannel } = require('../utils/rabbitmq');
+const amqp = require('amqplib');
+const { transferPaymentToNotificationQueue } = require('../utils/rabbitmq');
+require('dotenv').config();
 
-const QUEUE_NAME = 'PaymentQueue';
 
-const sendPayment = async (paymentPayload) => {
-    const channel = getChannel();
-    channel.assertQueue(QUEUE_NAME, { durable: true });
-    channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(paymentPayload)));
-    console.log('Payment sent to queue:', paymentPayload);
+const sendToPaymentQueue = async (paymentData) => {
+    try {
+        const connection = await amqp.connect(process.env.RABBITMQ_URL);
+        const channel = await connection.createChannel();
+
+        const queue = 'PaymentQueue';
+        await channel.assertQueue(queue, { durable: true });
+
+        channel.sendToQueue(queue, Buffer.from(JSON.stringify(paymentData)), {
+            persistent: true,
+        });
+
+        console.log('Payment data sent to queue');
+
+        await transferPaymentToNotificationQueue();
+
+        await channel.close();
+        await connection.close();
+    } catch (error) {
+        console.error('Error sending payment to RabbitMQ:', error);
+        throw error;
+    }
 };
 
-const start = async () => {
-    console.log('Payment Service is running...');
-};
-
-module.exports = { sendPayment, start };
+module.exports = { sendToPaymentQueue };

@@ -1,33 +1,20 @@
-require('dotenv').config();
 const express = require('express');
-const bodyParser = require('body-parser');
-const { connectRabbitMQ } = require('./utils/rabbitmq');
-const paymentService = require('./services/paymentService');
-const notificationService = require('./services/notificationService');
+const { sendToPaymentQueue } = require('./services/paymentService');
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
-
-// RabbitMQ'yu başlat
-connectRabbitMQ().then(() => {
-    paymentService.start();
-    notificationService.start();
-});
-
-// API Endpoint: Ödeme Gönder
 app.post('/payment', async (req, res) => {
-    const { user, paymentType, cardNo } = req.body;
+    const paymentData = req.body;
 
-    if (!user || !paymentType || !cardNo) {
-        return res.status(400).send({ message: 'All fields are required' });
+    try {
+        await sendToPaymentQueue(paymentData);
+        res.status(200).send('Payment request sent to queue');
+    } catch (error) {
+        res.status(500).send('Failed to process payment');
     }
-
-    await paymentService.sendPayment({ user, paymentType, cardNo });
-    res.send({ message: 'Payment has been sent to the queue' });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(3000, () => {
+    console.log('Server running on http://localhost:3000');
 });

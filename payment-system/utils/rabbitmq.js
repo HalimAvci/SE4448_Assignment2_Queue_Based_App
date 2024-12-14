@@ -1,17 +1,36 @@
 const amqp = require('amqplib');
 
-let channel;
+const RABBITMQ_URI = process.env.RABBITMQ_URI || 'amqp://localhost';
 
-const connectRabbitMQ = async () => {
+async function connectRabbitMQ() {
     try {
-        const connection = await amqp.connect('amqp://localhost');
-        channel = await connection.createChannel();
-        console.log('RabbitMQ Connected!');
+        const connection = await amqp.connect(RABBITMQ_URI);
+        const channel = await connection.createChannel();
+        return channel;
     } catch (error) {
-        console.error('RabbitMQ Connection Error:', error);
+        console.error('RabbitMQ bağlantısı başarısız:', error);
+        throw error;
     }
-};
+}
 
-const getChannel = () => channel;
+async function transferPaymentToNotificationQueue() {
+    const channel = await connectRabbitMQ();
 
-module.exports = { connectRabbitMQ, getChannel };
+    const paymentQueue = 'PaymentQueue';
+    const notificationQueue = 'NotificationQueue';
+
+    await channel.assertQueue(paymentQueue, { durable: true });
+    await channel.assertQueue(notificationQueue, { durable: true });
+
+    channel.consume(paymentQueue, async (msg) => {
+        if (msg) {
+            console.log('PaymentQueue\'dan alınan mesaj:', msg.content.toString());
+
+            await channel.sendToQueue(notificationQueue, Buffer.from(msg.content));
+            
+            channel.ack(msg);
+        }
+    });
+}
+
+module.exports = { transferPaymentToNotificationQueue };

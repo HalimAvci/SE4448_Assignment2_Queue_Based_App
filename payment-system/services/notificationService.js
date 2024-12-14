@@ -1,50 +1,51 @@
+const amqp = require('amqplib');
 const nodemailer = require('nodemailer');
-const { getChannel } = require('../utils/rabbitmq');
+require('dotenv').config();
 
-const PAYMENT_QUEUE = 'PaymentQueue';
-const NOTIFICATION_QUEUE = 'NotificationQueue';
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER, // .env'deki adres
-        pass: process.env.EMAIL_PASS, // .env'deki şifre
-    },
-});
-
-const start = async () => {
-    const channel = getChannel();
-    channel.assertQueue(PAYMENT_QUEUE, { durable: true });
-    channel.consume(PAYMENT_QUEUE, async (msg) => {
-        const payment = JSON.parse(msg.content.toString());
-        console.log('Processing payment:', payment);
-
-        // Bildirim kuyruğuna gönder
-        channel.assertQueue(NOTIFICATION_QUEUE, { durable: true });
-        channel.sendToQueue(NOTIFICATION_QUEUE, Buffer.from(JSON.stringify(payment)));
-
-        // Ödemeyi tamamla
-        channel.ack(msg);
-
-        // E-posta gönder
-        await sendNotification(payment);
+const sendNotificationEmail = async (emailData) => {
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
     });
-};
 
-const sendNotification = async (payment) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
-        to: payment.user,
-        subject: 'Payment Received',
-        text: `Your payment of type ${payment.paymentType} has been processed.`,
+        to: emailData.user,
+        subject: 'Payment Successful',
+        text: `Hello, your payment of type ${emailData.paymentType} was successful.`,
     };
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Email sent to:', payment.user);
+        console.log('Email sent to', emailData.user);
     } catch (error) {
-        console.error('Email Error:', error);
+        console.error('Error sending email:', error);
     }
 };
 
-module.exports = { start };
+
+const processPaymentQueue = async () => {
+    try {
+        const connection = await amqp.connect(process.env.RABBITMQ_URL);
+        const channel = await connection.createChannel();
+        const queue = 'PaymentQueue';
+
+        await channel.assertQueue(queue, { durable: true });
+
+        channel.consume(queue, async (msg) => {
+            const paymentData = JSON.parse(msg.content.toString());
+            console.log('Received payment data:', paymentData);
+
+            await sendNotificationEmail(paymentData);
+
+            channel.ack(msg);
+        });
+    } catch (error) {
+        console.error('Error processing payment queue:', error);
+    }
+};
+
+processPaymentQueue();  // Kuyruğu dinlemeye başlıyoruz
