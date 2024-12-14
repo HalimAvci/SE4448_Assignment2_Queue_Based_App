@@ -27,7 +27,7 @@ async function transferPaymentToNotificationQueue() {
             console.log('PaymentQueue\'dan alınan mesaj:', msg.content.toString());
 
             await channel.sendToQueue(notificationQueue, Buffer.from(msg.content));
-            
+
             channel.ack(msg);
         }
     });

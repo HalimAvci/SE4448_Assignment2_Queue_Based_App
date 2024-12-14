@@ -48,4 +48,4 @@ const processPaymentQueue = async () => {
     }
 };
 
-processPaymentQueue();  // Kuyruğu dinlemeye başlıyoruz
+processPaymentQueue();
