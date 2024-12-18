@@ -15,36 +15,59 @@ const sendNotificationEmail = async (emailData) => {
         from: process.env.EMAIL_USER,
         to: emailData.user,
         subject: 'Payment Successful',
-        text: `Hello, your payment of type ${emailData.paymentType} was successful.`,
+        text: `Hello,\n\nYour payment of type "${emailData.paymentType}" was successful.\n\nThank you!`,
     };
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Email sent to', emailData.user);
+        console.log(`\u2705 Email successfully sent to: ${emailData.user}`);
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error(`\u274C Error sending email to ${emailData.user}:`, error);
+        throw error;
     }
 };
-
 
 const processPaymentQueue = async () => {
     try {
         const connection = await amqp.connect(process.env.RABBITMQ_URL);
         const channel = await connection.createChannel();
-        const queue = 'PaymentQueue';
+        const paymentQueue = 'PaymentQueue';
+        const notificationQueue = 'NotificationQueue';
 
-        await channel.assertQueue(queue, { durable: true });
+        await channel.assertQueue(paymentQueue, { durable: true });
+        await channel.assertQueue(notificationQueue, { durable: true });
 
-        channel.consume(queue, async (msg) => {
+        console.log(`Listening for messages in queue: "${paymentQueue}"`);
+
+        channel.consume(paymentQueue, async (msg) => {
             const paymentData = JSON.parse(msg.content.toString());
-            console.log('Received payment data:', paymentData);
 
-            await sendNotificationEmail(paymentData);
+            const maskedCardNo = paymentData.cardNo.replace(/^(\d{4})\d+(\d{4})$/, '$1********$2');
+            const updatedPaymentData = { ...paymentData, cardNo: maskedCardNo };
 
-            channel.ack(msg);
+            console.log(`Received payment data:\n   User: ${updatedPaymentData.user}\n   Payment Type: ${updatedPaymentData.paymentType}\n   Card No: ${updatedPaymentData.cardNo}`);
+
+            try {
+                await sendNotificationEmail(updatedPaymentData);
+
+                const notificationMessage = {
+                    user: updatedPaymentData.user,
+                    message: 'Your payment has been received successfully.',
+                };
+
+                channel.sendToQueue(notificationQueue, Buffer.from(JSON.stringify(notificationMessage)), {
+                    persistent: true,
+                });
+
+                console.log(`Notification added to queue: "${notificationQueue}" for user: ${updatedPaymentData.user}`);
+
+                channel.ack(msg);
+            } catch (error) {
+                console.error(`\u274C Failed to process payment data for user: ${updatedPaymentData.user}`);
+            }
         });
     } catch (error) {
-        console.error('Error processing payment queue:', error);
+        console.error('\u274C Error processing payment queue:', error);
     }
 };
 

@@ -24,7 +24,7 @@ async function transferPaymentToNotificationQueue() {
 
     channel.consume(paymentQueue, async (msg) => {
         if (msg) {
-            console.log('PaymentQueue\'dan alınan mesaj:', msg.content.toString());
+            console.log('Message received from PaymentQueue: \u2705 Your message has been received!'); // msg.content.toString()
 
             await channel.sendToQueue(notificationQueue, Buffer.from(msg.content));
 
