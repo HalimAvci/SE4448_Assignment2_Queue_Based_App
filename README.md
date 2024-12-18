@@ -45,9 +45,12 @@ To start the application, run:
 ```bash
 node app.js
 ```
+
+Prototypes (In development):
 ![Ekran görüntüsü 2024-12-14 223954](https://github.com/user-attachments/assets/3b9f12f8-93bd-4ddb-aa00-bc8392d0b96a)
 ![Ekran görüntüsü 2024-12-14 224359](https://github.com/user-attachments/assets/1c155aab-50e7-48bc-8431-2b157f68ed75)
-
+Final status:
+![Ekran görüntüsü 2024-12-18 213735](https://github.com/user-attachments/assets/446c838e-9cc0-402a-839b-14568bfffad4)
 
 # Test the Payment Endpoint
 
