@@ -11,7 +11,7 @@ This project demonstrates a simple payment processing system using **RabbitMQ** 
 # Features
 
  - **Payment Processing Queue:** Payment data is sent to a RabbitMQ queue (PaymentQueue).
- - **Email Notifications:** After the payment is processed, a confirmation email is sent to the user via Gmail.
+ - **Email Notifications:** After the payment is processed, a confirmation email is sent to the user.
  - **REST API:** The project exposes a POST endpoint (/payment) for receiving payment requests.
 
 # Technologies
