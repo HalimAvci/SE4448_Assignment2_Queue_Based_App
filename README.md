@@ -1,3 +1,8 @@
+# Presentation Link
+
+
+Note: The audio recording is missing due to issues with finding a suitable microphone.
+
 # Payment System with RabbitMQ
 
 This project demonstrates a simple payment processing system using **RabbitMQ** and **Email Notifications.** The payment data is sent to a **PaymentQueue**, and once processed, a notification email is sent to the user confirming the successful payment.
